@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Match Game</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #dfeeff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 38px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* ✅ SIMPLE RULE TEXT (NO BOX) */
+    #ruleHint {
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    .game {
+      display: flex;
+      justify-content: center;
+      gap: 80px;
+      margin-bottom: 50px;
+    }
+
+    .panel {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btns button {
+      width: 120px;
+      height: 42px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      margin: 5px;
+    }
+
+    .match { background: #e57373; }
+    .nomatch { background: #57bdf5; }
+
+    #msg {
+      height: 30px;
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>Match or No Match</h2>
+
+  <div class="top">
+    <div>Score: <span id="score">0</span></div>
+    <div>Level: <span id="level">1</span></div>
+  </div>
+
+  <!-- ✅ SIMPLE RULE TEXT -->
+  <div id="ruleHint">Rule: COMPARE SHAPE ONLY</div>
+
+  <div class="game">
+    <div class="panel" id="left"></div>
+    <div class="panel" id="right"></div>
+  </div>
+
+  <div class="btns">
+    <button class="match" onclick="answer(true)">MATCH</button>
+    <button class="nomatch" onclick="answer(false)">NO MATCH</button>
+  </div>
+
+  <div id="msg"></div>
+
+</div>
+
+<script>
+let audioCtx = null;
+
+function beep(type) {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = type === "good" ? 650 : 180;
+  gain.gain.value = 0.08;
+  osc.start();
+  setTimeout(() => osc.stop(), 120);
+}
+
+let score = 0;
+let level = 1;
+let correctCount = 0;
+let wrong = 0;
+let isMatch = false;
+
+const shapes = ["circle", "triangle"];
+const colors = ["#E17055","#6C5CE7","#00B894","#FDCB6E"];
+
+const left = document.getElementById("left");
+const right = document.getElementById("right");
+const msg = document.getElementById("msg");
+
+/* SHAPE */
+function shape(s,c){
+  let d=document.createElement("div");
+
+  if(s==="circle"){
+    d.style.width="60px";
+    d.style.height="60px";
+    d.style.borderRadius="50%";
+    d.style.background=c;
+  }
+
+  if(s==="triangle"){
+    d.style.width="0";
+    d.style.height="0";
+    d.style.borderLeft="30px solid transparent";
+    d.style.borderRight="30px solid transparent";
+    d.style.borderBottom="60px solid "+c;
+  }
+
+  return d;
+}
+
+/* MATCH LOGIC */
+function checkMatch(p1,p2){
+  if(level<=2){
+    return p1[0].s === p2[0].s;
+  }else{
+    return JSON.stringify(p1)===JSON.stringify(p2);
+  }
+}
+
+/* NEW ROUND */
+function newRound(){
+
+  let base=[];
+  let other=[];
+
+  /* LEVEL 1–2 */
+  if(level<=2){
+    let s = shapes[Math.floor(Math.random()*shapes.length)];
+
+    let c1 = colors[Math.floor(Math.random()*colors.length)];
+    let c2 = colors[Math.floor(Math.random()*colors.length)];
+
+    while(c1 === c2){
+      c2 = colors[Math.floor(Math.random()*colors.length)];
+    }
+
+    base = [{s:s,c:c1}];
+
+    if(Math.random()>0.5){
+      other = [{s:s,c:c2}];
+    }else{
+      let s2 = shapes.find(x=>x!==s);
+      other = [{s:s2,c:c2}];
+    }
+  }
+
+  /* LEVEL 3+ */
+  else{
+    let count = level<=4 ? 2 : 4;
+
+    for(let i=0;i<count;i++){
+      base.push({
+        s: shapes[Math.floor(Math.random()*shapes.length)],
+        c: colors[Math.floor(Math.random()*colors.length)]
+      });
+    }
+
+    other = Math.random()>0.5
+      ? JSON.parse(JSON.stringify(base))
+      : base.map(x=>({
+          s: shapes[Math.floor(Math.random()*shapes.length)],
+          c: colors[Math.floor(Math.random()*colors.length)]
+        }));
+  }
+
+  isMatch = checkMatch(base,other);
+
+  render(left,base);
+  render(right,other);
+}
+
+/* RENDER */
+function render(pan,p){
+  pan.innerHTML="";
+  p.forEach(x=>pan.appendChild(shape(x.s,x.c)));
+}
+
+/* ANSWER */
+function answer(user){
+  if(user===isMatch){
+    score+=2;
+    correctCount++;
+    beep("good");
+    msg.innerText="Correct ✅";
+    msg.style.color="green";
+  }else{
+    wrong++;
+    beep("bad");
+    msg.innerText="Wrong ❌";
+    msg.style.color="red";
+  }
+
+  document.getElementById("score").innerText=score;
+
+  if(correctCount>=15){
+    level++;
+    correctCount=0;
+    document.getElementById("level").innerText=level;
+
+    // update rule text
+    let text="";
+    if(level<=2) text="COMPARE SHAPE ONLY";
+    else if(level<=4) text="COMPARE SHAPE + COLOR";
+    else text="COMPARE PATTERN";
+
+    document.getElementById("ruleHint").innerText = "Rule: " + text;
+  }
+
+  if(wrong>=5){
+    gameOver();
+    return;
+  }
+
+  setTimeout(()=>{
+    msg.innerText="";
+    newRound();
+  },300);
+}
+
+/* GAME OVER */
+function gameOver(){
+  document.body.innerHTML = `
+    <div style="text-align:center;">
+      <h2>Game Over </h2>
+      <h3>Score: ${score}</h3>
+      <button onclick="location.reload()"
+      style="padding:10px 18px;border:none;border-radius:8px;background:#6c5ce7;color:white;">
+        Restart
+      </button>
+    </div>
+  `;
+}
+
+newRound();
+</script>
+
+</body>
+</html>
