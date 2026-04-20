@@ -34,20 +34,13 @@
       margin-bottom: 10px;
       font-size: 20px;
       font-weight: bold;
-    }
-
-    /* ✅ SIMPLE RULE TEXT (NO BOX) */
-    #ruleHint {
-      font-size: 15px;
-      color: #555;
-      margin-bottom: 15px;
-    }
+ }
 
     .game {
       display: flex;
       justify-content: center;
-      align-items:center;
-      gap:80px;
+      gap: 80px;
+      margin-bottom: 15px;
     }
 
     .panel {
@@ -56,6 +49,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
+    }
+    .grid{
+      display:grid;
+      justify-content:center;
+      align-content:center;
+      justify-items:center;
+      align-items:center;
+    }
+    .btns{
+      display:flex;
+      justify-content:center;
+      gap:20px;
     }
 
     .btns button {
@@ -80,7 +85,6 @@
 </head>
 
 <body>
-
 <div class="container">
 
   <h2>Match or No Match</h2>
@@ -90,8 +94,7 @@
     <div>Level: <span id="level">1</span></div>
   </div>
 
-  <!-- ✅ SIMPLE RULE TEXT -->
-  <div id="ruleHint">Rule: COMPARE SHAPE ONLY</div>
+  <div id="ruleHint"> Compare only the shapes and choose MATCH or NO MATCH</div>
 
   <div class="game">
     <div class="panel" id="left"></div>
@@ -137,13 +140,15 @@ const left = document.getElementById("left");
 const right = document.getElementById("right");
 const msg = document.getElementById("msg");
 
-/* SHAPE */
+/* ✅ ONLY CHANGE: size control */
 function shape(s,c){
   let d=document.createElement("div");
 
+  let size = (level >= 5) ? 28 : 60;
+
   if(s==="circle"){
-    d.style.width="60px";
-    d.style.height="60px";
+    d.style.width=size+"px";
+    d.style.height=size+"px";
     d.style.borderRadius="50%";
     d.style.background=c;
   }
@@ -151,9 +156,9 @@ function shape(s,c){
   if(s==="triangle"){
     d.style.width="0";
     d.style.height="0";
-    d.style.borderLeft="30px solid transparent";
-    d.style.borderRight="30px solid transparent";
-    d.style.borderBottom="60px solid "+c;
+    d.style.borderLeft=(size/2)+"px solid transparent";
+    d.style.borderRight=(size/2)+"px solid transparent";
+    d.style.borderBottom=size+"px solid "+c;
   }
 
   return d;
@@ -174,7 +179,6 @@ function newRound(){
   let base=[];
   let other=[];
 
-  /* LEVEL 1–2 */
   if(level<=2){
     let s = shapes[Math.floor(Math.random()*shapes.length)];
 
@@ -195,7 +199,6 @@ function newRound(){
     }
   }
 
-  /* LEVEL 3+ */
   else{
     let count = level<=4 ? 2 : 4;
 
@@ -218,12 +221,31 @@ function newRound(){
 
   render(left,base);
   render(right,other);
+  updateRule();
 }
 
-/* RENDER */
+/* ✅ ONLY CHANGE: spacing */
 function render(pan,p){
   pan.innerHTML="";
-  p.forEach(x=>pan.appendChild(shape(x.s,x.c)));
+
+  let g = document.createElement("div");
+  g.className = "grid";
+
+  g.style.placeItems="center";
+  
+  if(level >= 5){
+    g.style.gap = "12px";
+  }
+  else if(level >= 3){
+    g.style.gap = "20px";
+  } 
+  else{
+    g.style.gap = "0px";
+  }
+
+  p.forEach(x=>g.appendChild(shape(x.s,x.c)));
+
+  pan.appendChild(g);
 }
 
 /* ANSWER */
@@ -247,28 +269,32 @@ function answer(user){
     level++;
     correctCount=0;
     document.getElementById("level").innerText=level;
-
-    // update rule text
-    let text="";
-    if(level<=2) text="COMPARE SHAPE ONLY";
-    else if(level<=4) text="COMPARE SHAPE + COLOR";
-    else text="COMPARE PATTERN";
-
-    document.getElementById("ruleHint").innerText = "Rule: " + text;
   }
-
   if(wrong>=5){
     gameOver();
     return;
   }
-
   setTimeout(()=>{
     msg.innerText="";
     newRound();
-  },300);
+},300);
 }
+  function updateRule(){
+  let text="";
 
-/* GAME OVER */
+  if(level <= 2){
+    text = "Compare only shapes and choose MATCH or NO MATCH";
+  }
+  else if(level <= 4){
+    text = "Compare shapes and colors and choose MATCH or NO MATCH";
+  }
+  else{
+    text = "Compare patterns and choose MATCH or NO MATCH";
+  }
+
+  document.getElementById("ruleHint").innerText = text;
+  }
+
 function gameOver(){
   document.body.innerHTML = `
     <div style="text-align:center;">
