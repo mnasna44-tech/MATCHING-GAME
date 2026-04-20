@@ -6,17 +6,17 @@
   "display": "standalone",
   "background_color": "#F8F6F3",
   "theme_color": "#2D3436",
-  "description": "Cognitive training games to improve memory, attention, and decision-making skills.",
+  "description": "Cognitive training games to improve memory and attention",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Crect width='100%25' height='100%25' fill='%236C5CE7'/%3E%3C/svg%3E",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Crect width='100%25' height='100%25' fill='%236C5CE7'/%3E%3C/svg%3E",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
